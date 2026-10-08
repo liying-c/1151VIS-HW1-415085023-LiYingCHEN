@@ -1,0 +1,5 @@
+source,freq_hz,amplitude
+source_a,110,1.0
+source_a,220,0.45
+source_b,350,0.8
+source_b,700,0.3

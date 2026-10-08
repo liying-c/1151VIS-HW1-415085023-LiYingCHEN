@@ -1,0 +1,81 @@
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --surface-2: #f0efec;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #8a8984;
+  --grid: #e3e2de;
+  --series-1: #2a78d6;   /* 來源 A */
+  --series-2: #eb6834;   /* 來源 B */
+  --series-3: #1baf7a;   /* 混合訊號 */
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #262625;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8e8d86;
+    --grid: #343432;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --surface-2: #262625;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8e8d86;
+  --grid: #343432;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-family: -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  line-height: 1.55;
+}
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px 56px; }
+header h1 { font-size: 1.6rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--text-secondary); }
+.meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
+
+figure { margin: 36px 0 0; }
+figure h2 { font-size: 1.1rem; margin: 0 0 4px; }
+figure .desc { margin: 0 0 12px; font-size: 0.92rem; color: var(--text-secondary); }
+
+/* 圖表（D3 動態產生的 SVG 元素，所以放在全域樣式而不是 scoped） */
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart svg text { font-family: inherit; }
+.panel-title { font-size: 12.5px; font-weight: 600; fill: var(--text-primary); }
+.axis text { fill: var(--text-secondary); font-size: 11px; }
+.axis line, .axis path { stroke: var(--grid); }
+.grid line { stroke: var(--grid); stroke-dasharray: 2 3; }
+.grid .domain { display: none; }
+.axis-label { fill: var(--text-secondary); font-size: 11.5px; }
+.peak-label { fill: var(--text-primary); font-size: 11.5px; font-weight: 600; }
+.peak-sub { fill: var(--text-secondary); font-size: 10.5px; }
+.legend text { fill: var(--text-secondary); font-size: 11.5px; }
+
+details { margin-top: 20px; font-size: 0.9rem; }
+summary { cursor: pointer; color: var(--text-secondary); }
+table { border-collapse: collapse; margin-top: 8px; width: 100%; max-width: 520px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+.status { color: var(--text-muted); margin-top: 24px; }
+.error { color: #d03b3b; margin-top: 16px; font-size: 0.9rem; white-space: pre-wrap; }
+footer { margin-top: 40px; font-size: 0.85rem; color: var(--text-muted); }
+footer code, .meta code { font-size: 0.85em; }

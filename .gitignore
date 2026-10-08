@@ -1,0 +1,23 @@
+# Claude Code / AI tooling (never commit)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Editors
+.vscode/
+.idea/
