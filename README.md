@@ -4,6 +4,18 @@
 - 姓名：LiYing CHEN
 - 主題：兩個音源 (A、B) 加上白雜訊疊成一條混合訊號，比較「時域波形」與「頻域振幅頻譜」。在時域裡三者纏在一起，轉到頻域後每個音源的頻率成分就各自分開，這也是音訊分離 (audio source separation) 的基本觀念。
 
+### 作業要求對照
+
+| 作業要求 | 完成方式 | 對應章節 |
+|---|---|---|
+| 在 GitHub 開 repository `1151VIS-HW1-學號-姓名` | `1151VIS-HW1-415085023-LiYingCHEN` | 3.6 |
+| Visibility: public | 建立時以 `--public` 設定，可在 repo 頁面看到 Public 標籤 | 3.6 |
+| .gitignore: HTML | GitHub 範本清單沒有 HTML 這項，自行撰寫（排除 `node_modules/`、`dist/`、`.DS_Store` 等） | 3.6 |
+| 將專案上傳至個人 GitHub | `git push -u origin master` | 3.6 |
+| 共享給指定信箱 | Settings → Collaborators → Add people，以 email 邀請 | 3.6 |
+| 專案執行後螢幕錄影、擷取關鍵畫面 | macOS 內建錄影 (Shift + ⌘ + 5)，擷取為 `screenshot.png` | 3.8 |
+| 文件內容同步至 repo 的 .md | 本檔 `README.md` 即繳交文件 | — |
+
 ---
 
 ## 1. 專案截圖
@@ -99,16 +111,49 @@ npm run dev                  # 開發伺服器，預設 http://localhost:5173/
 
 打包成靜態網站：`npm run build`，輸出在 `dist/`（可用 `npm run preview` 預覽）。
 
-### 3.6 上傳 GitHub 與分享
+### 3.6 建立 GitHub repository、上傳與共享
+
+**(1) 建立 repository，Visibility 設為 Public**
+
+用 GitHub CLI 一行完成（名稱 `1151VIS-HW1-學號-姓名`，`--public` 即 Visibility: Public）：
+
+```bash
+gh repo create 1151VIS-HW1-415085023-LiYingCHEN --public --source=. --remote=origin
+```
+
+若用網頁操作：GitHub 右上角 **+ → New repository** → Repository name 填 `1151VIS-HW1-415085023-LiYingCHEN` → Visibility 選 **Public** → Create repository。
+
+**(2) .gitignore**
+
+GitHub 建立 repo 時的 .gitignore 範本清單沒有「HTML」這個選項，因此自行撰寫 `.gitignore`，排除不該進 repo 的檔案：
+
+```
+node_modules/   # npm 安裝的套件（由 package.json 重建）
+dist/           # Vite build 輸出（由 GitHub Actions 重建）
+.DS_Store       # macOS 系統檔
+__pycache__/    # Python 快取
+.vscode/ .idea/ # 編輯器設定
+```
+
+**(3) 上傳專案**
 
 ```bash
 git init
 git add .
-git commit -m "HW1: static D3.js visualization of audio mixture spectrum"
-gh repo create 1151VIS-HW1-415085023-LiYingCHEN --public --source=. --remote=origin --push
+git commit -m "HW1: static visualization of audio mixture waveform and spectrum with Vue 3 + D3.js"
+git push -u origin master
 ```
 
-分享給助教 / 老師：到 repository 的 **Settings → Collaborators → Add people**，輸入老師提供的 email 送出邀請。
+**(4) 共享給老師**
+
+GitHub 的 API 無法用 email 邀請協作者，所以在網頁操作：
+
+1. 進入 repo 頁面 → **Settings**（上方分頁列最右邊）
+2. 左側 **Access → Collaborators**
+3. 按 **Add people**，輸入老師提供的 email → 在下拉清單選取 → **Add … to this repository**
+4. GitHub 會寄邀請信給對方，對方按 Accept invitation 後即可看到 repo（repo 本身是 Public，邀請前也能瀏覽，邀請是為了讓老師在 Collaborators 清單中看到這份作業）
+
+直接前往設定頁：`https://github.com/liying-c/1151VIS-HW1-415085023-LiYingCHEN/settings/access`
 
 ### 3.7 部署到 GitHub Pages
 
@@ -120,7 +165,13 @@ gh api -X POST repos/liying-c/1151VIS-HW1-415085023-LiYingCHEN/pages -f build_ty
 
 `vite.config.js` 設 `base: './'`，打包後用相對路徑載入資源與 CSV，放在 `/<repo 名稱>/` 子路徑下也能正常執行。
 
-### 3.8 檔案結構
+### 3.8 螢幕錄影與擷取關鍵畫面
+
+1. 在專案目錄執行 `npm run dev`，瀏覽器開啟 <http://localhost:5173/>（或直接開 GitHub Pages 網址）。
+2. macOS 按 **Shift + ⌘ + 5** → 選「錄製整個螢幕」或「錄製所選部分」→ 錄下頁面載入、圖 1 時域波形、圖 2 頻譜、展開資料表、滑鼠移到峰值顯示 tooltip 的過程。
+3. 從影片擷取關鍵畫面（暫停後 Shift + ⌘ + 4 截圖），存成 `screenshot.png` 放在 repo 根目錄，第 1 節的圖片就會更新。
+
+### 3.9 檔案結構
 
 ```
 .
