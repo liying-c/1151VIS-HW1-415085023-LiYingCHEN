@@ -23,7 +23,7 @@
 ![專案截圖](screenshot.png)
 
 > 圖 1（上）：來源 A、來源 B、混合訊號前 50 ms 的時域波形，三個面板共用時間軸與振幅刻度。
-> 圖 2（下）：混合訊號 0–1000 Hz 的振幅頻譜，四個峰值對應兩個音源的基頻與泛音。
+> 圖 2（下）：來源 A、來源 B、混合訊號 0–1000 Hz 的振幅頻譜，三個面板與圖 1 同樣順序、同樣畫法，共用頻率軸與振幅刻度；混合訊號的四個峰正好是 A、B 各自峰值的疊加。
 
 ---
 
@@ -93,7 +93,7 @@ python3 generate_data.py
 |---|---|
 | `src/App.vue` | 在 `onMounted` 用 `d3.csv(..., d3.autoType)` 同時載入三個 CSV，存成 `ref`；用 `computed` 算出每個峰值在頻譜上實際量到的值，再以 props 傳給子元件 |
 | `src/components/WaveformChart.vue` | 圖 1 時域波形：三個小面板 (small multiples) 上下排列，各畫一條 `d3.line()`，共用同一組 `d3.scaleLinear()` 的 x（時間 ms）與 y（振幅）刻度 |
-| `src/components/SpectrumChart.vue` | 圖 2 振幅頻譜：`d3.area()` + `d3.line()` 畫混合訊號頻譜，用 `d3.least()` 對齊四個峰值，畫圓點並直接標註「來源、頻率、振幅」，右上角有圖例 |
+| `src/components/SpectrumChart.vue` | 圖 2 振幅頻譜：與圖 1 同樣的三個小面板（來源 A、來源 B、混合訊號），各用 `d3.area()` + `d3.line()` 畫頻譜，共用 x（頻率 Hz）與 y（振幅）刻度；用 `d3.least()` 對齊峰值所在的 bin，以純文字標註「頻率、量測振幅」 |
 | `src/components/PeakTable.vue` | 資料表：純 Vue 模板 `v-for` 渲染，讓數值不靠顏色也能閱讀 |
 | `src/series.js` | 三條序列的固定顏色與標籤（顏色跟著實體走，不跟著順序走） |
 | `src/style.css` | 色票以 CSS custom properties 定義，支援系統深色模式 (`prefers-color-scheme`)；配色有用工具檢查色盲 (CVD) 可分辨性 |

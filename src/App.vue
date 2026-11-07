@@ -57,8 +57,8 @@ const measuredPeaks = computed(() =>
       </figure>
 
       <figure>
-        <h2>圖 2　混合訊號的振幅頻譜（0–1000 Hz）</h2>
-        <p class="desc">對 0.5 秒的混合訊號做 Hann 視窗 + FFT。四個峰值對應兩個音源的基頻與泛音，峰高幾乎等於原始振幅，雜訊則攤成底部的細小起伏。</p>
+        <h2>圖 2　振幅頻譜（0–1000 Hz）</h2>
+        <p class="desc">對同樣三條訊號各做 Hann 視窗 + FFT，三個面板與圖 1 同樣順序、同樣顏色、共用同一組頻率軸與振幅刻度。來源 A 只在 110 / 220 Hz 有峰，來源 B 只在 350 / 700 Hz 有峰；混合訊號的四個峰正好是兩者疊加，峰高幾乎等於原始振幅，雜訊則攤成底部的細小起伏。</p>
         <SpectrumChart :rows="spectrum" :peaks="measuredPeaks" :fmax="1000" />
         <PeakTable :peaks="measuredPeaks" />
       </figure>

@@ -1,12 +1,14 @@
 <script setup>
-// 圖 2：混合訊號的振幅頻譜（面積 + 折線），並在四個峰值直接標註來源、頻率與振幅。
+// 圖 2：三個小面板 (small multiples)，各畫一條振幅頻譜（面積 + 折線），
+// 排列順序、顏色與畫法都和圖 1 一致：來源 A、來源 B、混合訊號各一個面板，共用 x / y 刻度。
+// 峰值只用文字標註（不另外畫圓點），讓三條序列維持同一種視覺編碼。
 import { ref, onMounted, watch } from 'vue'
 import * as d3 from 'd3'
-import { SOURCE_NAME, SOURCE_COLOR, MIX_COLOR } from '../series.js'
+import { SERIES, SOURCE_NAME } from '../series.js'
 
 const props = defineProps({
   rows: { type: Array, required: true },   // spectrum.csv：{ freq_hz, source_a, source_b, mixture }
-  peaks: { type: Array, required: true },  // 已含 measured 的峰值：{ source, freq_hz, amplitude, measured }
+  peaks: { type: Array, required: true },  // 各音源的頻率成分：{ source, freq_hz, amplitude }
   fmax: { type: Number, default: 1000 },   // 只畫到這個頻率
 })
 
@@ -23,77 +25,78 @@ function draw() {
   const rows = props.rows.filter(d => d.freq_hz <= props.fmax)
   if (!rows.length) return
 
-  const H = 320
-  const TOP = 44
-  const BOTTOM = 46
+  const PH = 118   // 每個面板的繪圖高度
+  const TITLE = 24 // 面板標題保留高度
+  const GAP = 16
+  const TOP = 6
+  const n = SERIES.length
+  const lastBottom = TOP + (n - 1) * (TITLE + PH + GAP) + TITLE + PH
+  const H = lastBottom + 46
   const plotW = W - ML - MR
 
   const svg = d3.select(el).append('svg')
     .attr('viewBox', [0, 0, W, H])
     .attr('role', 'img')
-    .attr('aria-label', `混合訊號 0 到 ${props.fmax} Hz 的振幅頻譜，標出來源 A 與來源 B 的峰值`)
+    .attr('aria-label', `來源 A、來源 B 與混合訊號 0 到 ${props.fmax} Hz 的振幅頻譜，三個面板上下排列，峰值標出頻率與振幅`)
 
   const x = d3.scaleLinear().domain([0, props.fmax]).range([ML, W - MR])
-  const yMax = Math.max(1, d3.max(rows, d => d.mixture))
-  const y = d3.scaleLinear().domain([0, yMax * 1.12]).range([H - BOTTOM, TOP])
+  // 三個面板共用同一個 y 刻度；上方多留 35% 放峰值文字
+  const absMax = d3.max(rows, d => Math.max(d.source_a, d.source_b, d.mixture))
+  const yMax = Math.max(1, Math.ceil(absMax * 10) / 10)
+  const yTicks = d3.range(0, yMax + 1e-9, 0.5)
 
-  // 格線、座標軸、軸標籤
-  svg.append('g').attr('class', 'grid').attr('transform', `translate(${ML},0)`)
-    .call(d3.axisLeft(y).ticks(4).tickSize(-plotW).tickFormat(''))
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(${ML},0)`)
-    .call(d3.axisLeft(y).ticks(4).tickSize(4).tickFormat(d3.format('.1f')))
-    .call(g => g.select('.domain').remove())
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${H - BOTTOM})`)
+  // 每個面板要標註的峰值：來源面板標自己的成分，混合訊號面板標全部四個
+  const peaksFor = key => props.peaks
+    .filter(p => p.freq_hz <= props.fmax && (key === 'mixture' || p.source === key))
+    .map(p => {
+      const bin = d3.least(rows, d => Math.abs(d.freq_hz - p.freq_hz))
+      return { ...p, measured: bin ? bin[key] : NaN }
+    })
+
+  SERIES.forEach((s, i) => {
+    const top = TOP + i * (TITLE + PH + GAP) + TITLE
+    const y = d3.scaleLinear().domain([0, yMax * 1.35]).range([top + PH, top])
+
+    // 面板標題 + 色塊（與圖 1 相同）
+    svg.append('rect')
+      .attr('x', ML).attr('y', top - 17).attr('width', 10).attr('height', 10).attr('rx', 2)
+      .style('fill', s.color)
+    svg.append('text').attr('class', 'panel-title').attr('x', ML + 16).attr('y', top - 8).text(s.label)
+
+    // 格線與 y 軸
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${ML},0)`)
+      .call(d3.axisLeft(y).tickValues(yTicks).tickSize(-plotW).tickFormat(''))
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(${ML},0)`)
+      .call(d3.axisLeft(y).tickValues(yTicks).tickSize(4).tickFormat(d3.format('.1f')))
+      .call(g => g.select('.domain').remove())
+
+    // 頻譜：淡色面積 + 折線，三個面板一樣的畫法
+    svg.append('path').datum(rows)
+      .style('fill', s.color).attr('fill-opacity', 0.12)
+      .attr('d', d3.area().x(d => x(d.freq_hz)).y0(y(0)).y1(d => y(d[s.key])))
+    svg.append('path').datum(rows)
+      .attr('fill', 'none').style('stroke', s.color)
+      .attr('stroke-width', 1.75).attr('stroke-linejoin', 'round')
+      .attr('d', d3.line().x(d => x(d.freq_hz)).y(d => y(d[s.key])))
+
+    // 峰值標註：純文字兩行（頻率 / 量測振幅），混合訊號面板多寫是哪個來源
+    const g = svg.append('g').selectAll('g').data(peaksFor(s.key)).join('g')
+      .attr('transform', d => `translate(${x(d.freq_hz)},${y(d.measured)})`)
+    g.append('text').attr('class', 'peak-label').attr('text-anchor', 'middle').attr('y', -18)
+      .text(d => (s.key === 'mixture' ? `${SOURCE_NAME[d.source]} ` : '') + `${d.freq_hz} Hz`)
+    g.append('text').attr('class', 'peak-sub').attr('text-anchor', 'middle').attr('y', -6)
+      .text(d => d.measured.toFixed(2))
+    g.append('title')
+      .text(d => `${SOURCE_NAME[d.source]}：${d.freq_hz} Hz\n設定振幅 ${d.amplitude.toFixed(2)}，${s.label.split('：')[0]}頻譜量測 ${d.measured.toFixed(3)}`)
+  })
+
+  // 共用的 x 軸只畫在最下面
+  svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${lastBottom + 6})`)
     .call(d3.axisBottom(x).ticks(10).tickSize(4))
     .call(g => g.select('.domain').remove())
   svg.append('text').attr('class', 'axis-label')
-    .attr('x', W - MR).attr('y', H - 8).attr('text-anchor', 'end').text('頻率 (Hz)')
-  svg.append('text').attr('class', 'axis-label').attr('x', ML - 44).attr('y', TOP - 10).text('振幅')
-
-  // 頻譜：淡色面積 + 折線
-  svg.append('path').datum(rows)
-    .style('fill', MIX_COLOR).attr('fill-opacity', 0.12)
-    .attr('d', d3.area().x(d => x(d.freq_hz)).y0(y(0)).y1(d => y(d.mixture)))
-  svg.append('path').datum(rows)
-    .attr('fill', 'none').style('stroke', MIX_COLOR)
-    .attr('stroke-width', 1.75).attr('stroke-linejoin', 'round')
-    .attr('d', d3.line().x(d => x(d.freq_hz)).y(d => y(d.mixture)))
-
-  // 峰值標註：圓點（外圈留 2px 底色）+ 兩行文字 + 滑鼠停留的 tooltip
-  const marks = props.peaks.filter(p => p.freq_hz <= props.fmax)
-  const g = svg.append('g').selectAll('g').data(marks).join('g')
-    .attr('transform', d => `translate(${x(d.freq_hz)},${y(d.measured)})`)
-  g.append('circle').attr('r', 5.5)
-    .style('fill', d => SOURCE_COLOR[d.source])
-    .style('stroke', 'var(--surface-1)').attr('stroke-width', 2)
-  g.append('text').attr('class', 'peak-label').attr('text-anchor', 'middle').attr('y', -22)
-    .text(d => `${SOURCE_NAME[d.source]} ${d.freq_hz} Hz`)
-  g.append('text').attr('class', 'peak-sub').attr('text-anchor', 'middle').attr('y', -10)
-    .text(d => `振幅 ${d.measured.toFixed(2)}`)
-  g.append('title')
-    .text(d => `${SOURCE_NAME[d.source]}：${d.freq_hz} Hz\n設定振幅 ${d.amplitude.toFixed(2)}，頻譜量測 ${d.measured.toFixed(3)}`)
-
-  // 圖例（右上角，從右往左排）
-  const legend = svg.append('g').attr('class', 'legend').attr('transform', `translate(${W - MR},${TOP - 30})`)
-  const items = [
-    { label: '混合訊號頻譜', color: MIX_COLOR, kind: 'line' },
-    { label: '來源 A 的成分', color: SOURCE_COLOR.source_a, kind: 'dot' },
-    { label: '來源 B 的成分', color: SOURCE_COLOR.source_b, kind: 'dot' },
-  ]
-  let cursor = 0
-  items.slice().reverse().forEach(it => {
-    const li = legend.append('g')
-    li.append('text').attr('x', -cursor).attr('y', 4).attr('text-anchor', 'end').text(it.label)
-    const tw = it.label.length * 11.5 + 4
-    if (it.kind === 'dot') {
-      li.append('circle').attr('cx', -cursor - tw - 6).attr('cy', 0).attr('r', 4.5).style('fill', it.color)
-    } else {
-      li.append('line')
-        .attr('x1', -cursor - tw - 14).attr('x2', -cursor - tw).attr('y1', 0).attr('y2', 0)
-        .style('stroke', it.color).attr('stroke-width', 2.5)
-    }
-    cursor += tw + 30
-  })
+    .attr('x', W - MR).attr('y', lastBottom + 40).attr('text-anchor', 'end').text('頻率 (Hz)')
+  svg.append('text').attr('class', 'axis-label').attr('x', ML - 44).attr('y', TOP + 10).text('振幅')
 }
 
 onMounted(draw)
